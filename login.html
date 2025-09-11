@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Agri Assist - Farmer Crop Management</title>
+  <style>
+    /* Reset */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body, html {
+      height: 100%;
+      width: 100%;
+    }
+
+    body {
+      background: url('https://c1.wallpaperflare.com/preview/813/356/857/soybean-field-farming-field-agriculture-thumbnail.jpg') no-repeat center center fixed;
+      background-size: cover;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      position: relative;
+      color: #fff;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: 100%;
+      background: rgba(30, 50, 10, 0.65);
+      z-index: 0;
+    }
+
+    .container {
+      position: relative;
+      background: rgba(255, 255, 255, 0.12);
+      backdrop-filter: blur(10px);
+      border-radius: 15px;
+      max-width: 420px;
+      width: 100%;
+      padding: 40px 30px 30px;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+      z-index: 1;
+      text-align: center;
+    }
+
+    h1 {
+      font-weight: 700;
+      margin-bottom: 10px;
+      letter-spacing: 1.2px;
+      font-size: 28px;
+      color: #d8f3a1;
+      text-shadow: 0 0 8px rgba(161, 207, 62, 0.9);
+    }
+
+    p.subtitle {
+      margin-bottom: 25px;
+      font-size: 14px;
+      color: #e0f0a1;
+      letter-spacing: 0.8px;
+      text-shadow: 0 0 6px rgba(161, 207, 62, 0.7);
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      text-align: left;
+    }
+
+    label {
+      font-weight: 600;
+      margin-bottom: 5px;
+      display: block;
+      font-size: 14px;
+      letter-spacing: 0.8px;
+      color: #d8f3a1;
+      text-shadow: 0 0 4px rgba(0,0,0,0.4);
+    }
+
+    input[type="text"],
+    input[type="password"],
+    input[type="email"] {
+      padding: 12px 15px;
+      border-radius: 8px;
+      border: none;
+      font-size: 16px;
+      outline: none;
+      transition: 0.3s ease;
+      width: 100%;
+      background: rgba(255, 255, 255, 0.25);
+      color: #2b3a0b;
+      font-weight: 600;
+    }
+
+    input::placeholder {
+      color: #000000;
+    }
+
+    input:focus {
+      background: rgba(255, 255, 255, 0.5);
+      box-shadow: 0 0 12px #a1cf3e;
+      color: #1c2a00;
+    }
+
+    .password-wrapper {
+      position: relative;
+    }
+
+    .password-wrapper input {
+      padding-right: 35px;
+    }
+
+    .toggle-password {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      cursor: pointer;
+      user-select: none;
+      font-size: 16px;
+    }
+
+    .btn {
+      padding: 14px;
+      border: none;
+      border-radius: 10px;
+      background-color: #a1cf3e;
+      font-weight: 700;
+      font-size: 16px;
+      color: #2b3a0b;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      letter-spacing: 1.1px;
+      box-shadow: 0 5px 15px rgba(161, 207, 62, 0.8);
+      margin-top: 10px;
+    }
+
+    .btn:hover {
+      background-color: #8bb62c;
+      box-shadow: 0 7px 20px rgba(139, 182, 44, 1);
+    }
+
+    .text-right {
+      text-align: right;
+    }
+
+    .link {
+      font-size: 13px;
+      color: #d8f3a1;
+      cursor: pointer;
+      text-decoration: underline;
+      user-select: none;
+      transition: color 0.3s ease;
+      text-shadow: 0 0 4px rgba(0,0,0,0.4);
+      margin-top: -10px;
+    }
+
+    .link:hover {
+      color: #f7ffe5;
+    }
+
+    .toggle-message {
+      margin-top: 25px;
+      font-size: 15px;
+      color: #d8f3a1;
+      user-select: none;
+      text-shadow: 0 0 4px rgba(0,0,0,0.4);
+    }
+
+    .toggle-message a {
+      color: #a1cf3e;
+      font-weight: 700;
+      text-decoration: none;
+      transition: color 0.3s ease;
+      margin-left: 5px;
+      cursor: pointer;
+    }
+
+    .toggle-message a:hover {
+      color: #8bb62c;
+      text-decoration: underline;
+    }
+
+    .message-box {
+      text-align: center;
+      margin-top: 10px;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    @media (max-width: 420px) {
+      .container {
+        padding: 30px 20px 25px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container" role="main" aria-label="Agri Assist Farmer Crop Management authentication forms">
+    <h1>Agri Assist</h1>
+
+    <!-- Login Form -->
+    <form id="loginForm" novalidate>
+      <p class="subtitle">Farmer Crop Management Login</p>
+
+      <label for="loginUsername">Username</label>
+      <input type="text" id="loginUsername" name="loginUsername" placeholder="Enter your username" required minlength="3"/>
+
+      <label for="loginPassword">Password</label>
+      <div class="password-wrapper">
+        <input type="password" id="loginPassword" name="loginPassword" placeholder="Enter your password" required minlength="6"/>
+        <span class="toggle-password">👁️</span>
+      </div>
+
+      <button type="submit" class="btn">Login</button>
+      <div class="link text-right" tabindex="0" role="button" id="forgotPasswordBtn">Forgot Password?</div>
+    </form>
+
+    <!-- Create Account Form -->
+    <form id="createAccountForm" class="hidden" novalidate>
+      <p class="subtitle">Create a New Account</p>
+      <label for="createUsername">Username</label>
+      <input type="text" id="createUsername" name="createUsername" placeholder="Choose a username" required minlength="3"/>
+      <label for="createEmail">Email</label>
+      <input type="email" id="createEmail" name="createEmail" placeholder="Your email address" required/>
+      <label for="createPassword">Password</label>
+      <div class="password-wrapper">
+        <input type="password" id="createPassword" name="createPassword" placeholder="Create a password" required minlength="6"/>
+        <span class="toggle-password">👁️</span>
+      </div>
+      <label for="confirmPassword">Confirm Password</label>
+      <div class="password-wrapper">
+        <input type="password" id="confirmPassword" name="confirmPassword" placeholder="Confirm your password" required minlength="6"/>
+        <span class="toggle-password">👁️</span>
+      </div>
+      <button type="submit" class="btn">Create Account</button>
+    </form>
+
+    <!-- Forgot Password Form -->
+    <form id="forgotPasswordForm" class="hidden" novalidate>
+      <p class="subtitle">Reset Your Password</p>
+      <label for="resetEmail">Email</label>
+      <input type="email" id="resetEmail" name="resetEmail" placeholder="Enter your registered email" required/>
+      <button type="submit" class="btn">Send Reset Link</button>
+    </form>
+
+    <!-- Success Message -->
+    <div id="successMessage" class="message-box hidden">
+      <h2 style="color:#d8f3a1;">Check Your Email</h2>
+      <p>Password reset instructions have been sent.</p>
+      <button class="btn" id="backToLoginBtn">Back to Login</button>
+    </div>
+
+    <div class="toggle-message">
+      <span id="toggleText">Don't have an account?</span>
+      <a href="#" id="toggleFormLink">Create Account</a>
+    </div>
+  </div>
+
+  <script>
+    const passwordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{6,}$/;
+    const loginForm = document.getElementById('loginForm');
+    const createAccountForm = document.getElementById('createAccountForm');
+    const forgotPasswordForm = document.getElementById('forgotPasswordForm');
+    const successMessage = document.getElementById('successMessage');
+    const backToLoginBtn = document.getElementById('backToLoginBtn');
+    const toggleFormLink = document.getElementById('toggleFormLink');
+    const toggleText = document.getElementById('toggleText');
+    const forgotPasswordBtn = document.getElementById('forgotPasswordBtn');
+
+    // Forgot password button
+    forgotPasswordBtn.addEventListener('click', () => {
+      loginForm.classList.add('hidden');
+      createAccountForm.classList.add('hidden');
+      successMessage.classList.add('hidden');
+      forgotPasswordForm.classList.remove('hidden');
+      toggleText.textContent = "Remembered your password?";
+      toggleFormLink.textContent = "Login";
+    });
+
+    // Toggle forms
+    toggleFormLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      loginForm.classList.add('hidden');
+      createAccountForm.classList.add('hidden');
+      forgotPasswordForm.classList.add('hidden');
+      successMessage.classList.add('hidden');
+
+      if (toggleFormLink.textContent === "Create Account") {
+        createAccountForm.classList.remove('hidden');
+        toggleText.textContent = "Already have an account?";
+        toggleFormLink.textContent = "Login";
+      } else {
+        loginForm.classList.remove('hidden');
+        toggleText.textContent = "Don't have an account?";
+        toggleFormLink.textContent = "Create Account";
+      }
+    });
+
+    // Login validation
+    loginForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const username = loginForm.loginUsername.value.trim();
+      const password = loginForm.loginPassword.value.trim();
+      if (username.length < 3) { alert('Username must be at least 3 characters long.'); return; }
+      if (!passwordPattern.test(password)) { alert('Password must be at least 6 characters long, include at least one uppercase letter, one lowercase letter, and one number.'); return; }
+      alert(`Logging in as ${username}...`);
+      window.location.href = 'index.html'; // 🔥 changed from homepage.html to index.html
+    });
+
+    // Create account validation
+    createAccountForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const username = createAccountForm.createUsername.value.trim();
+      const email = createAccountForm.createEmail.value.trim();
+      const password = createAccountForm.createPassword.value;
+      const confirmPassword = createAccountForm.confirmPassword.value;
+      if (username.length < 3) { alert('Username must be at least 3 characters long.'); return; }
+      const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailPattern.test(email)) { alert('Please enter a valid email address.'); return; }
+      if (!passwordPattern.test(password)) { alert('Password must be strong.'); return; }
+      if (password !== confirmPassword) { alert('Passwords do not match.'); return; }
+      alert(`Account created for ${username}!`);
+      createAccountForm.classList.add('hidden');
+      loginForm.classList.remove('hidden');
+      toggleText.textContent = "Don't have an account?";
+      toggleFormLink.textContent = "Create Account";
+    });
+
+    // Forgot password validation with success message
+    forgotPasswordForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const email = document.getElementById('resetEmail').value.trim();
+      if (email === "") { alert("Please enter your email address."); return; }
+      forgotPasswordForm.classList.add('hidden');
+      successMessage.classList.remove('hidden');
+    });
+
+    // Back to Login from success screen
+    backToLoginBtn.addEventListener('click', () => {
+      successMessage.classList.add('hidden');
+      loginForm.classList.remove('hidden');
+      toggleText.textContent = "Don't have an account?";
+      toggleFormLink.textContent = "Create Account";
+    });
+
+    // Show/Hide password toggle
+    document.querySelectorAll('.toggle-password').forEach(toggle => {
+      toggle.addEventListener('click', () => {
+        const input = toggle.previousElementSibling;
+        if (input.type === 'password') { input.type = 'text'; toggle.textContent = '🙈'; }
+        else { input.type = 'password'; toggle.textContent = '👁️'; }
+      });
+    });
+  </script>
+</body>
+</html>

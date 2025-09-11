@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Agri-Assist - Weather</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <div class="container">
+      <h1 class="logo">Agri-Assist</h1>
+      <nav>
+        <ul class="nav-links">
+          <li><a href="index.html" class="nav-link">Home</a></li>
+          <li><a href="crops.html" class="nav-link">Crops</a></li>
+          <li><a href="field.html" class="nav-link">Field Management</a></li>
+          <li><a href="weather.html" class="nav-link active">Weather</a></li>
+          <li><a href="contact.html" class="nav-link">Contact</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <section class="container">
+    <h2>Weather Updates</h2>
+    <p>Enter your city to check the latest forecast:</p>
+    <input type="text" id="cityInput" placeholder="Enter city name" />
+    <button class="btn-primary" id="getWeather">Get Weather</button>
+    <div id="weatherResult"></div>
+  </section>
+
+  <footer>
+    <div class="container">
+      <p>© 2025 Agri-Assist. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <script>
+    document.getElementById("getWeather").addEventListener("click", async () => {
+      const city = document.getElementById("cityInput").value.trim();
+      if (!city) {
+        document.getElementById("weatherResult").textContent = "Please enter a city.";
+        return;
+      }
+
+      const apiKey = "YOUR_API_KEY"; // Replace with your OpenWeatherMap API key
+      const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric`;
+
+      try {
+        const response = await fetch(url);
+        const data = await response.json();
+
+        if (data.cod === "404") {
+          document.getElementById("weatherResult").textContent = "City not found.";
+        } else {
+          document.getElementById("weatherResult").textContent =
+            `${data.name}: ${data.weather[0].description}, ${data.main.temp}°C`;
+        }
+      } catch (err) {
+        document.getElementById("weatherResult").textContent = "Error fetching weather.";
+      }
+    });
+  </script>
+</body>
+</html>
