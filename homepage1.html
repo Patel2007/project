@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Agriculture & Crop Management</title>
+  <style>
+    /* Reset */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body, html {
+      height: 100%;
+      width: 100%;
+      color: #d8f3a1;
+      background: url('https://c1.wallpaperflare.com/preview/813/356/857/soybean-field-farming-field-agriculture-thumbnail.jpg') no-repeat center center fixed;
+      background-size: cover;
+      position: relative;
+      overflow-x: hidden;
+      display: flex; /* to place sidebar and main content side by side */
+    }
+
+    /* Dark overlay */
+    body::before {
+      content: "";
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 100%;
+      width: 100%;
+      background: rgba(30, 50, 10, 0.65);
+      z-index: 0;
+    }
+
+    /* Sidebar (vertical dashboard) */
+    .sidebar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 100vh;
+      width: 220px;
+      background: rgba(255, 255, 255, 0.12);
+      backdrop-filter: blur(10px);
+      box-shadow: 2px 0 30px rgba(0, 0, 0, 0.5);
+      padding: 30px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 25px;
+      z-index: 2;
+      border-radius: 0 15px 15px 0;
+      user-select: none;
+    }
+
+    .sidebar .logo {
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: 1.2px;
+      text-shadow: 0 0 8px rgba(161, 207, 62, 0.9);
+      margin-bottom: 40px;
+      color: #d8f3a1;
+    }
+
+    .sidebar nav ul {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .sidebar nav a {
+      text-decoration: none;
+      color: #d8f3a1;
+      font-weight: 600;
+      font-size: 18px;
+      letter-spacing: 0.8px;
+      transition: color 0.3s ease;
+      text-shadow: 0 0 4px rgba(0,0,0,0.4);
+      user-select: none;
+      padding: 8px 15px;
+      border-radius: 10px;
+      display: block;
+    }
+
+    .sidebar nav a:hover,
+    .sidebar nav a.active {
+      color: #a1cf3e;
+      text-shadow: 0 0 10px rgba(161, 207, 62, 1);
+      background-color: rgba(161, 207, 62, 0.15);
+    }
+
+    /* Main content wrapper - to leave space for sidebar */
+    .main-content {
+      margin-left: 240px; /* width of sidebar + some gap */
+      padding: 30px 40px;
+      flex: 1;
+      z-index: 1;
+      position: relative;
+    }
+
+    /* Header */
+    header {
+      background: rgba(255, 255, 255, 0.12);
+      backdrop-filter: blur(10px);
+      padding: 20px 30px;
+      border-radius: 15px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      color: #d8f3a1;
+      position: relative;
+      z-index: 1;
+      user-select: none;
+    }
+
+    /* Hero Section */
+    .hero {
+      background: rgba(255, 255, 255, 0.12);
+      backdrop-filter: blur(10px);
+      border-radius: 15px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+      padding: 80px 30px;
+      margin: 40px 0;
+      text-align: center;
+      color: #d8f3a1;
+      position: relative;
+      user-select: none;
+    }
+
+    .hero h2 {
+      font-size: 2.8rem;
+      font-weight: 700;
+      letter-spacing: 1.4px;
+      margin-bottom: 20px;
+      text-shadow: 0 0 8px rgba(161, 207, 62, 0.9);
+    }
+
+    .hero p {
+      font-size: 1.3rem;
+      margin-bottom: 30px;
+      letter-spacing: 0.8px;
+      text-shadow: 0 0 6px rgba(161, 207, 62, 0.7);
+    }
+
+    .btn-primary {
+      background-color: #a1cf3e;
+      padding: 14px 30px;
+      border: none;
+      border-radius: 10px;
+      color: #2b3a0b;
+      font-weight: 700;
+      font-size: 16px;
+      cursor: pointer;
+      letter-spacing: 1.1px;
+      box-shadow: 0 5px 15px rgba(161, 207, 62, 0.8);
+      transition: background-color 0.3s ease, box-shadow 0.3s ease;
+      user-select: none;
+      text-decoration: none;
+      display: inline-block;
+    }
+
+    .btn-primary:hover {
+      background-color: #8bb62c;
+      box-shadow: 0 7px 20px rgba(139, 182, 44, 1);
+      color: #1c2a00;
+    }
+
+    /* Features Section */
+    .features {
+      margin-bottom: 60px;
+      text-align: center;
+      position: relative;
+      user-select: none;
+    }
+
+    .features h3 {
+      font-size: 2.2rem;
+      font-weight: 700;
+      margin-bottom: 40px;
+      letter-spacing: 1.2px;
+      text-shadow: 0 0 8px rgba(161, 207, 62, 0.9);
+      color: #d8f3a1;
+    }
+
+    .feature-cards {
+      display: flex;
+      gap: 30px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.12);
+      backdrop-filter: blur(8px);
+      border-radius: 15px;
+      width: 280px;
+      padding: 25px 20px;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      color: #d8f3a1;
+      user-select: none;
+    }
+
+    .card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 15px 40px rgba(161, 207, 62, 0.9);
+    }
+
+    .card h4 {
+      margin-bottom: 12px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-shadow: 0 0 6px rgba(161, 207, 62, 0.85);
+    }
+
+    .card p {
+      font-size: 14px;
+      line-height: 1.5;
+      color: #e0f0a1;
+      text-shadow: 0 0 4px rgba(0, 0, 0, 0.4);
+    }
+
+    /* Footer */
+    footer {
+      background: rgba(255, 255, 255, 0.12);
+      backdrop-filter: blur(10px);
+      border-radius: 15px;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+      padding: 20px 30px;
+      text-align: center;
+      color: #d8f3a1;
+      font-weight: 600;
+      letter-spacing: 0.8px;
+      user-select: none;
+      position: relative;
+      z-index: 1;
+      margin-top: 40px;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      body, html {
+        display: block;
+      }
+
+      .sidebar {
+        position: relative;
+        width: 100%;
+        height: auto;
+        border-radius: 15px 15px 0 0;
+        box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+        flex-direction: row;
+        justify-content: center;
+        padding: 15px 0;
+        gap: 40px;
+      }
+
+      .sidebar nav ul {
+        flex-direction: row;
+        gap: 30px;
+      }
+
+      .main-content {
+        margin-left: 0;
+        padding: 20px;
+      }
+    }
+
+    @media (max-width: 420px) {
+      .sidebar nav a {
+        font-size: 14px;
+        padding: 6px 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <aside class="sidebar" aria-label="Dashboard Navigation">
+    <h1 class="logo">Agri-Assist</h1>
+    <nav>
+      <ul>
+        <li><a href="#" class="active" aria-current="page">Home</a></li>
+        <li><a href="#">Contact Us</a></li>
+        <li><a href="#">About Us</a></li>
+        <li><a href="#">Field Management</a></li>
+        <li><a href="#">Log Out</a></li>
+      </ul>
+    </nav>
+  </aside>
+
+  <main class="main-content">
+    <header>
+      <h1>Welcome to Agri-Assist</h1>
+    </header>
+
+    <section class="hero">
+      <h2>Smart Agriculture and Crop Management</h2>
+      <p>Optimize your farm productivity with our easy-to-use platform.</p>
+      <a href="#" class="btn-primary">Get Started</a>
+    </section>
+
+    <section class="features" aria-label="Features of Agri-Assist">
+      <h3>Our Features</h3>
+      <div class="feature-cards">
+        <div class="card" tabindex="0">
+          <h4>Crop Monitoring</h4>
+          <p>Track the growth and health of your crops in real-time.</p>
+        </div>
+        <div class="card" tabindex="0">
+          <h4>Field Management</h4>
+          <p>Organize your fields, manage tasks, and schedule activities efficiently.</p>
+        </div>
+        <div class="card" tabindex="0">
+          <h4>Weather Updates</h4>
+          <p>Get accurate local weather forecasts to plan your farming activities.</p>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      <p>© 2025 Agri-Assist. All rights reserved.</p>
+    </footer>
+  </main>
+
+  <script>
+    // Sidebar nav active link toggling
+    const sidebarLinks = document.querySelectorAll(".sidebar nav a");
+
+    sidebarLinks.forEach(link => {
+      link.addEventListener("click", e => {
+        sidebarLinks.forEach(el => el.classList.remove("active"));
+        link.classList.add("active");
+        e.preventDefault(); // prevent default for demo
+      });
+    });
+  </script>
+</body>
+</html>
