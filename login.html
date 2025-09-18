@@ -270,100 +270,204 @@
   </div>
 
   <script>
-    const passwordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{6,}$/;
-    const loginForm = document.getElementById('loginForm');
-    const createAccountForm = document.getElementById('createAccountForm');
-    const forgotPasswordForm = document.getElementById('forgotPasswordForm');
-    const successMessage = document.getElementById('successMessage');
-    const backToLoginBtn = document.getElementById('backToLoginBtn');
-    const toggleFormLink = document.getElementById('toggleFormLink');
-    const toggleText = document.getElementById('toggleText');
-    const forgotPasswordBtn = document.getElementById('forgotPasswordBtn');
+  // passwordPattern: alphanumeric, min 6, at least 1 upper, 1 lower, 1 digit
+  const passwordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)[A-Za-z\d]{6,}$/;
 
-    // Forgot password button
-    forgotPasswordBtn.addEventListener('click', () => {
-      loginForm.classList.add('hidden');
-      createAccountForm.classList.add('hidden');
-      successMessage.classList.add('hidden');
-      forgotPasswordForm.classList.remove('hidden');
-      toggleText.textContent = "Remembered your password?";
-      toggleFormLink.textContent = "Login";
-    });
+  const loginForm = document.getElementById('loginForm');
+  const createAccountForm = document.getElementById('createAccountForm');
+  const toggleFormLink = document.getElementById('toggleFormLink');
+  const toggleText = document.getElementById('toggleText');
+  const forgotPasswordBtn = document.getElementById('forgotPasswordBtn');
 
-    // Toggle forms
-    toggleFormLink.addEventListener('click', (e) => {
-      e.preventDefault();
-      loginForm.classList.add('hidden');
-      createAccountForm.classList.add('hidden');
-      forgotPasswordForm.classList.add('hidden');
-      successMessage.classList.add('hidden');
+  // -----------------------
+  // Create account handler
+  // -----------------------
+  createAccountForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
 
-      if (toggleFormLink.textContent === "Create Account") {
-        createAccountForm.classList.remove('hidden');
-        toggleText.textContent = "Already have an account?";
-        toggleFormLink.textContent = "Login";
-      } else {
-        loginForm.classList.remove('hidden');
-        toggleText.textContent = "Don't have an account?";
-        toggleFormLink.textContent = "Create Account";
+    const username = createAccountForm.createUsername.value.trim();
+    const email = createAccountForm.createEmail.value.trim().toLowerCase();
+    const password = createAccountForm.createPassword.value;
+    const confirmPassword = createAccountForm.confirmPassword.value;
+
+    if (username.length < 3) {
+      alert('Username must be at least 3 characters long.');
+      return;
+    }
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailPattern.test(email)) {
+      alert('Please enter a valid email address.');
+      return;
+    }
+    if (!passwordPattern.test(password)) {
+      alert('Password must be at least 6 characters long, include at least one uppercase letter, one lowercase letter, and one number; only letters and digits allowed.');
+      return;
+    }
+    if (password !== confirmPassword) {
+      alert('Passwords do not match.');
+      return;
+    }
+
+    try {
+      // Ensure username is unique using a transaction-like check
+      const usernameDocRef = db.collection('usernames').doc(username);
+      const usernameDoc = await usernameDocRef.get();
+      if (usernameDoc.exists) {
+        alert('Username already taken. Please choose another.');
+        return;
       }
-    });
 
-    // Login validation
-    loginForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const username = loginForm.loginUsername.value.trim();
-      const password = loginForm.loginPassword.value.trim();
-      if (username.length < 3) { alert('Username must be at least 3 characters long.'); return; }
-      if (!passwordPattern.test(password)) { alert('Password must be at least 6 characters long, include at least one uppercase letter, one lowercase letter, and one number.'); return; }
-      alert(`Logging in as ${username}...`);
-      window.location.href = 'index.html'; // 🔥 changed from homepage.html to index.html
-    });
+      // Create Firebase Authentication user
+      const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+      const uid = userCredential.user.uid;
 
-    // Create account validation
-    createAccountForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const username = createAccountForm.createUsername.value.trim();
-      const email = createAccountForm.createEmail.value.trim();
-      const password = createAccountForm.createPassword.value;
-      const confirmPassword = createAccountForm.confirmPassword.value;
-      if (username.length < 3) { alert('Username must be at least 3 characters long.'); return; }
-      const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailPattern.test(email)) { alert('Please enter a valid email address.'); return; }
-      if (!passwordPattern.test(password)) { alert('Password must be strong.'); return; }
-      if (password !== confirmPassword) { alert('Passwords do not match.'); return; }
-      alert(`Account created for ${username}!`);
-      createAccountForm.classList.add('hidden');
-      loginForm.classList.remove('hidden');
-      toggleText.textContent = "Don't have an account?";
-      toggleFormLink.textContent = "Create Account";
-    });
-
-    // Forgot password validation with success message
-    forgotPasswordForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const email = document.getElementById('resetEmail').value.trim();
-      if (email === "") { alert("Please enter your email address."); return; }
-      forgotPasswordForm.classList.add('hidden');
-      successMessage.classList.remove('hidden');
-    });
-
-    // Back to Login from success screen
-    backToLoginBtn.addEventListener('click', () => {
-      successMessage.classList.add('hidden');
-      loginForm.classList.remove('hidden');
-      toggleText.textContent = "Don't have an account?";
-      toggleFormLink.textContent = "Create Account";
-    });
-
-    // Show/Hide password toggle
-    document.querySelectorAll('.toggle-password').forEach(toggle => {
-      toggle.addEventListener('click', () => {
-        const input = toggle.previousElementSibling;
-        if (input.type === 'password') { input.type = 'text'; toggle.textContent = '🙈'; }
-        else { input.type = 'password'; toggle.textContent = '👁️'; }
+      // Create profile in Firestore and username mapping
+      const userDocRef = db.collection('users').doc(uid);
+      await userDocRef.set({
+        uid,
+        username,
+        email,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
       });
-    });
+
+      await usernameDocRef.set({ uid, email });
+
+      alert(`Account created for ${username}! You are now logged in.`);
+      // Log a "login" event (user is auto-signed in after create)
+      await db.collection('events').add({
+        uid,
+        username,
+        type: 'login',
+        ts: firebase.firestore.FieldValue.serverTimestamp()
+      });
+
+      // Redirect or update UI
+      window.location.href = 'homepage.html';
+    } catch (err) {
+      console.error(err);
+      alert('Error creating account: ' + err.message);
+    }
+  });
+
+  // -----------------------
+  // Login handler (support username or email)
+  // -----------------------
+  loginForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    let usernameOrEmail = loginForm.loginUsername.value.trim();
+    const password = loginForm.loginPassword.value;
+
+    if (usernameOrEmail.length < 3) {
+      alert('Enter a valid username/email (min 3 chars).');
+      return;
+    }
+    if (!passwordPattern.test(password)) {
+      alert('Password must be at least 6 characters long, include at least one uppercase letter, one lowercase letter, and one number; only letters and digits allowed.');
+      return;
+    }
+
+    try {
+      // Determine if user provided an email or a username
+      let emailToSignIn = usernameOrEmail;
+      const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailPattern.test(usernameOrEmail)) {
+        // treat as username -> lookup mapping
+        const mapDoc = await db.collection('usernames').doc(usernameOrEmail).get();
+        if (!mapDoc.exists) {
+          alert('Username not found.');
+          return;
+        }
+        emailToSignIn = mapDoc.data().email;
+      }
+
+      // Sign in via Firebase Auth (this ensures password must match)
+      const userCredential = await auth.signInWithEmailAndPassword(emailToSignIn, password);
+      const uid = userCredential.user.uid;
+
+      // Get username from users collection (safe)
+      const userDoc = await db.collection('users').doc(uid).get();
+      const username = userDoc.exists ? userDoc.data().username : null;
+
+      // Log login event
+      await db.collection('events').add({
+        uid,
+        username,
+        type: 'login',
+        ts: firebase.firestore.FieldValue.serverTimestamp()
+      });
+
+      alert(`Logged in as ${username || emailToSignIn}`);
+      window.location.href = 'homepage.html';
+    } catch (err) {
+      console.error(err);
+      alert('Login failed: ' + err.message);
+    }
+  });
+
+  // -----------------------
+  // Logout function (call this when logging out)
+  // -----------------------
+  async function doLogout() {
+    const user = auth.currentUser;
+    if (!user) return;
+    try {
+      // Get username for event
+      const userDoc = await db.collection('users').doc(user.uid).get();
+      const username = userDoc.exists ? userDoc.data().username : null;
+
+      // Log logout
+      await db.collection('events').add({
+        uid: user.uid,
+        username,
+        type: 'logout',
+        ts: firebase.firestore.FieldValue.serverTimestamp()
+      });
+
+      await auth.signOut();
+      alert('You have been logged out.');
+      window.location.href = 'index.html'; // or wherever
+    } catch (err) {
+      console.error(err);
+      alert('Logout failed: ' + err.message);
+    }
+  }
+
+  // Example: attach logout
+  // document.getElementById('logoutBtn').addEventListener('click', doLogout);
+
+  // -----------------------
+  // Optional: track auth state changes
+  // -----------------------
+  auth.onAuthStateChanged(user => {
+    if (user) {
+      // user signed in
+      console.log('User signed in:', user.uid, user.email);
+    } else {
+      // signed out
+      console.log('No user signed in.');
+    }
+  });
+
+  // -----------------------
+  // Toggle forms (keep your earlier toggle code)
+  // -----------------------
+  toggleFormLink.addEventListener('click', (e) => {
+    e.preventDefault();
+    if (loginForm.classList.contains('hidden')) {
+      loginForm.classList.remove('hidden');
+      createAccountForm.classList.add('hidden');
+      toggleText.textContent = "Don't have an account?";
+      toggleFormLink.textContent = 'Create Account';
+    } else {
+      loginForm.classList.add('hidden');
+      createAccountForm.classList.remove('hidden');
+      toggleText.textContent = "Already have an account?";
+      toggleFormLink.textContent = 'Login';
+    }
+  });
+
+  // Remember to keep your show/hide password toggle code if present
   </script>
 </body>
 </html>
+
