@@ -16,6 +16,7 @@
           <li><a href="crops.html" class="nav-link active">Crops</a></li>
           <li><a href="field.html" class="nav-link">Field Management</a></li>
           <li><a href="weather.html" class="nav-link">Weather</a></li>
+          <li><a href="marketplace.html" class="nav-link">Market Prices</a></li>
           <li><a href="contact.html" class="nav-link">Contact</a></li>
         </ul>
       </nav>
@@ -23,13 +24,12 @@
   </header>
 
   <section class="container">
-    <h2>Crops</h2>
-    <p>Learn about crop cycles, planting tips, and management:</p>
-    <ul>
-      <li><strong>Wheat:</strong> Best planting season, fertilizers, disease control.</li>
-      <li><strong>Rice:</strong> Water needs, harvesting tips, soil health.</li>
-      <li><strong>Maize:</strong> Suitable soil types, pest management.</li>
-    </ul>
+    <h2>Crop Information Guide</h2>
+    <p>Explore information on common crops, powered by a live plant database. Note: A CORS proxy is used for this client-side demo.</p>
+    
+    <div class="crop-cards" id="crop-container">
+      <div class="loading-spinner"></div>
+      </div>
   </section>
 
   <footer>
@@ -37,5 +37,58 @@
       <p>© 2025 Agri-Assist. All rights reserved.</p>
     </div>
   </footer>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const cropContainer = document.getElementById('crop-container');
+        // IMPORTANT: Replace with your own free API Token from https://trefle.io/
+        const trefleToken = 'YOUR_TREFLE_API_TOKEN';
+        
+        const commonCrops = ['corn', 'wheat', 'rice', 'potato', 'soybean', 'cotton'];
+
+        const fetchCropData = async (cropName) => {
+            const url = `https://cors-anywhere.herokuapp.com/https://trefle.io/api/v1/plants/search?token=${trefleToken}&q=${cropName}`;
+            
+            try {
+                const response = await fetch(url);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                return data.data[0]; 
+            } catch (error) {
+                console.error(`Error fetching data for ${cropName}:`, error);
+                return null;
+            }
+        };
+
+        const displayCrops = async () => {
+            cropContainer.innerHTML = '<div class="loading-spinner"></div>';
+            let allCropsHtml = '';
+
+            for (const crop of commonCrops) {
+                const cropData = await fetchCropData(crop);
+                if (cropData) {
+                    const imageUrl = cropData.image_url || 'https://images.pexels.com/photos/326055/pexels-photo-326055.jpeg?auto=compress&cs=tinysrgb&w=400';
+                    allCropsHtml += `
+                        <div class="card">
+                            <img src="${imageUrl}" alt="${cropData.common_name}">
+                            <h4>${cropData.common_name || 'N/A'}</h4>
+                            <p><strong>Scientific Name:</strong> <em>${cropData.scientific_name}</em></p>
+                            <p><strong>Family:</strong> ${cropData.family_common_name || cropData.family}</p>
+                        </div>
+                    `;
+                }
+            }
+            if (allCropsHtml) {
+                cropContainer.innerHTML = allCropsHtml;
+            } else {
+                 cropContainer.innerHTML = '<p class="text-center">Could not load crop data. Please check your API token and ensure the CORS proxy is active.</p>';
+            }
+        };
+
+        displayCrops();
+    });
+  </script>
 </body>
 </html>

@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Agri-Assist - Market Prices</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <header class="container">
+      <h1 class="logo">Agri-Assist</h1>
+      <nav>
+        <ul>
+          <li><a href="index.html">Home</a></li>
+          <li><a href="crops.html">Crops</a></li>
+          <li><a href="field.html">Field Management</a></li>
+          <li><a href="weather.html">Weather</a></li>
+          <li><a href="marketplace.html" class="active">Marketplace</a></li>
+          <li><a href="contact.html">Contact</a></li>
+        </ul>
+      </nav>
+  </header>
+
+<main class="container">
+  <section>
+    <h2>Latest Mandi Prices</h2>
+    <p class="text-center">Get the latest agricultural commodity prices from markets across India. Data sourced from <a href="https://data.gov.in/" target="_blank" class="inline-link">data.gov.in</a>.</p>
+
+    <div class="filters">
+      <p>Click the button to fetch the 50 most recently updated commodity prices from the public API.</p>
+      <button class="btn-primary" id="fetchPricesBtn">Fetch Latest Prices</button>
+    </div>
+
+    <div id="price-results">
+        <div id="loader" class="loading-spinner" style="display: none;"></div>
+        <table class="market-table" id="pricesTable" style="display: none;">
+            <thead>
+                <tr>
+                    <th>Commodity</th>
+                    <th>Market (District)</th>
+                    <th>State</th>
+                    <th>Min Price (₹/Quintal)</th>
+                    <th>Max Price (₹/Quintal)</th>
+                </tr>
+            </thead>
+            <tbody id="pricesTbody"></tbody>
+        </table>
+    </div>
+
+    <div id="priceChartContainer">
+        <h3>Sample Price Trend: Wheat (Last 6 Months)</h3>
+        <canvas id="priceChart"></canvas>
+    </div>
+  </section>
+</main>
+
+  <footer class="container">
+      <p>© 2025 Agri-Assist. All rights reserved.</p>
+  </footer>
+
+  <script>
+    document.getElementById('fetchPricesBtn').addEventListener('click', () => {
+        const loader = document.getElementById('loader');
+        const table = document.getElementById('pricesTable');
+        const tbody = document.getElementById('pricesTbody');
+        
+        loader.style.display = 'block';
+        table.style.display = 'none';
+        tbody.innerHTML = '';
+
+        const apiKey = '579b464db66ec23bdd000001cdd3946e44ce4aad7209ff7b23ac571b'; // Public key for data.gov.in
+        const apiUrl = `https://api.data.gov.in/resource/9ef84268-d588-465a-a308-a864a43d0070?api-key=${apiKey}&format=json&offset=0&limit=50`;
+
+        fetch(apiUrl)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                loader.style.display = 'none';
+                table.style.display = 'table';
+                
+                const records = data.records;
+                if (records && records.length > 0) {
+                    // IMPROVEMENT: Build the entire HTML string at once for better performance
+                    let rowsHtml = '';
+                    records.forEach(record => {
+                        rowsHtml += `<tr>
+                            <td>${record.commodity}</td>
+                            <td>${record.market} (${record.district})</td>
+                            <td>${record.state}</td>
+                            <td>${record.min_price}</td>
+                            <td>${record.max_price}</td>
+                        </tr>`;
+                    });
+                    tbody.innerHTML = rowsHtml; // Set the innerHTML only once
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="5" class="text-center">No price data found.</td></tr>';
+                }
+            })
+            .catch(error => {
+                console.error("API Fetch Error:", error);
+                loader.style.display = 'none';
+                tbody.innerHTML = `<tr><td colspan="5" class="text-center">Failed to fetch data. Please try again later.</td></tr>`;
+                table.style.display = 'table';
+            });
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const ctx = document.getElementById('priceChart').getContext('2d');
+        const labels = ['April', 'May', 'June', 'July', 'August', 'September'];
+        const priceData = [2050, 2100, 2080, 2150, 2210, 2190];
+
+        // FIX: The Chart.js configuration was unclosed. It is now complete.
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Price per Quintal (₹)',
+                    data: priceData,
+                    borderColor: '#a1cf3e',
+                    backgroundColor: 'rgba(161, 207, 62, 0.2)',
+                    pointBackgroundColor: '#c5e898',
+                    pointBorderColor: '#a1cf3e',
+                    fill: true,
+                    tension: 0.3
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: '#c5e898' // Font color for legend
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        ticks: {
+                            color: '#c5e898' // Font color for Y-axis labels
+                        },
+                        grid: {
+                            color: 'rgba(197, 232, 152, 0.2)' // Color for Y-axis grid lines
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            color: '#c5e898' // Font color for X-axis labels
+                        },
+                        grid: {
+                            color: 'rgba(197, 232, 152, 0.2)' // Color for X-axis grid lines
+                        }
+                    }
+                }
+            }
+        });
+    });
+  </script>
+</body>
+</html>

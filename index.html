@@ -16,6 +16,7 @@
           <li><a href="crops.html" class="nav-link">Crops</a></li>
           <li><a href="field.html" class="nav-link">Field Management</a></li>
           <li><a href="weather.html" class="nav-link">Weather</a></li>
+          <li><a href="marketplace.html" class="nav-link">Market Prices</a></li>
           <li><a href="contact.html" class="nav-link">Contact</a></li>
         </ul>
       </nav>
@@ -29,21 +30,54 @@
   </section>
 
   <section class="features container">
-    <h2>Our Features</h2>
+    <h2 class="text-center">Our Features</h2>
     <div class="feature-cards">
       <a href="crops.html" class="card">
-        <h4>Crop Monitoring</h4>
-        <p>Track the growth and health of your crops in real-time.</p>
+        <img src="https://images.pexels.com/photos/2132126/pexels-photo-2132126.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2" alt="A person inspecting crops">
+        <h4>Crop Information</h4>
+        <p>Access detailed guides on planting, managing, and harvesting various crops.</p>
       </a>
       <a href="field.html" class="card">
+        <img src="https://images.pexels.com/photos/440731/pexels-photo-440731.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2" alt="A tractor in a field">
         <h4>Field Management</h4>
         <p>Organize your fields, manage tasks, and schedule activities efficiently.</p>
       </a>
       <a href="weather.html" class="card">
+        <img src="https://images.pexels.com/photos/459469/pexels-photo-459469.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=2" alt="Sun shining over a field">
         <h4>Weather Updates</h4>
         <p>Get accurate local weather forecasts to plan your farming activities.</p>
       </a>
     </div>
+  </section>
+
+  <section class="new-sections container">
+      <div class="latest-news">
+          <h2 class="text-center">Latest News & Tips</h2>
+          <div class="feature-cards" id="news-container">
+              <div class="loading-spinner"></div>
+          </div>
+      </div>
+
+      <div class="testimonials">
+          <h2 class="text-center">What Farmers Are Saying</h2>
+          <div class="feature-cards">
+              <div class="card text-center">
+                  <img src="https://images.pexels.com/photos/937481/pexels-photo-937481.jpeg?auto=compress&cs=tinysrgb&w=400" alt="Farmer R. Singh" class="testimonial-img">
+                  <h4>- R. Singh, Punjab</h4>
+                  <p>"Agri-Assist's weather tool saved my wheat crop from an unexpected frost. Invaluable!"</p>
+              </div>
+              <div class="card text-center">
+                  <img src="https://images.pexels.com/photos/3775540/pexels-photo-3775540.jpeg?auto=compress&cs=tinysrgb&w=400" alt="Farmer A. Patel" class="testimonial-img">
+                  <h4>- A. Patel, Gujarat</h4>
+                  <p>"The field management checklist helps me stay organized during the busy planting season."</p>
+              </div>
+              <div class="card text-center">
+                  <img src="https://images.pexels.com/photos/1065084/pexels-photo-1065084.jpeg?auto=compress&cs=tinysrgb&w=400" alt="Farmer S. Reddy" class="testimonial-img">
+                  <h4>- S. Reddy, Andhra Pradesh</h4>
+                  <p>"The new market price feature is a game-changer for getting the best rate for my produce."</p>
+              </div>
+          </div>
+      </div>
   </section>
 
   <footer>
@@ -51,5 +85,44 @@
       <p>© 2025 Agri-Assist. All rights reserved.</p>
     </div>
   </footer>
+  
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const newsContainer = document.getElementById('news-container');
+        // IMPORTANT: Replace with your own free API key from https://gnews.io/
+        const apiKey = 'YOUR_GNEWS_API_KEY'; 
+        const url = `https://gnews.io/api/v4/search?q=agriculture&lang=en&country=in&max=3&apikey=${apiKey}`;
+
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                newsContainer.innerHTML = ''; // Clear spinner
+                if (data.articles && data.articles.length > 0) {
+                    data.articles.forEach(article => {
+                        const card = document.createElement('a');
+                        card.className = 'card';
+                        card.href = article.url;
+                        card.target = '_blank'; // Open in new tab
+                        
+                        const imageUrl = article.image || 'https://images.pexels.com/photos/3157890/pexels-photo-3157890.jpeg?auto=compress&cs=tinysrgb&w=400';
+
+                        card.innerHTML = `
+                            <img src="${imageUrl}" alt="${article.title}">
+                            <h4>${article.title}</h4>
+                            <p>${article.description}</p>
+                            <small>Source: ${article.source.name}</small>
+                        `;
+                        newsContainer.appendChild(card);
+                    });
+                } else {
+                    newsContainer.innerHTML = '<p class="text-center">Could not load news articles at this time.</p>';
+                }
+            })
+            .catch(error => {
+                console.error("Error fetching news:", error);
+                newsContainer.innerHTML = '<p class="text-center">Failed to load news. Please check your API key and network connection.</p>';
+            });
+    });
+  </script>
 </body>
 </html>
