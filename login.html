@@ -305,5 +305,28 @@ loginForm.addEventListener('submit', (e) => {
       });
     });
   </script>
+  <script type="module">
+  // Import the functions you need from the SDKs you need
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-analytics.js";
+  // TODO: Add SDKs for Firebase products that you want to use
+  // https://firebase.google.com/docs/web/setup#available-libraries
+
+  // Your web app's Firebase configuration
+  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+  const firebaseConfig = {
+    apiKey: "AIzaSyAXes_sqXoW-r60IfBRghgjsWV7QbyZEoY",
+    authDomain: "agri-assist-36efe.firebaseapp.com",
+    projectId: "agri-assist-36efe",
+    storageBucket: "agri-assist-36efe.firebasestorage.app",
+    messagingSenderId: "922716404983",
+    appId: "1:922716404983:web:fe85508f910ad07e6127f2",
+    measurementId: "G-PPR3M6GBGG"
+  };
+
+  // Initialize Firebase
+  const app = initializeApp(firebaseConfig);
+  const analytics = getAnalytics(app);
+</script>
 </body>
 </html>
