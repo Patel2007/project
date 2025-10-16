@@ -1,11 +1,105 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Agri-Assist - Crops</title>
   <link rel="stylesheet" href="style.css">
+
+  <style>
+    /* Additional styling specific to crops.html */
+    .region-input {
+      margin: 20px 0;
+      text-align: center;
+    }
+
+    .region-input label {
+      font-weight: 600;
+      color: #d8f3a1;
+      margin-right: 10px;
+      text-shadow: 0 0 4px rgba(0,0,0,0.4);
+    }
+
+    .region-input input {
+      padding: 10px 15px;
+      border-radius: 8px;
+      border: none;
+      outline: none;
+      width: 250px;
+      font-size: 15px;
+      background: rgba(255, 255, 255, 0.25);
+      color: #1c2a00;
+      font-weight: 600;
+      margin-right: 10px;
+    }
+
+    .region-input input::placeholder {
+      color: #444;
+    }
+
+    .region-input button {
+      padding: 12px 20px;
+      border: none;
+      border-radius: 10px;
+      background-color: #a1cf3e;
+      color: #2b3a0b;
+      font-weight: 700;
+      cursor: pointer;
+      transition: 0.3s;
+      box-shadow: 0 5px 15px rgba(161, 207, 62, 0.8);
+    }
+
+    .region-input button:hover {
+      background-color: #8bb62c;
+      box-shadow: 0 7px 20px rgba(139, 182, 44, 1);
+    }
+
+    .crop-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 25px;
+      margin-top: 30px;
+      justify-items: center;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 15px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+      overflow: hidden;
+      text-align: center;
+      backdrop-filter: blur(6px);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      width: 220px;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 25px rgba(161, 207, 62, 0.6);
+    }
+
+    .card img {
+      width: 100%;
+      height: 140px;
+      object-fit: cover;
+      border-bottom: 2px solid rgba(161, 207, 62, 0.6);
+    }
+
+    .card h4 {
+      color: #d8f3a1;
+      margin-top: 10px;
+      font-size: 18px;
+    }
+
+    .card p {
+      font-size: 14px;
+      color: #fff;
+      margin: 6px 12px;
+      text-align: left;
+    }
+  </style>
 </head>
+
 <body>
   <header>
     <div class="container">
@@ -25,11 +119,17 @@
 
   <section class="container">
     <h2>Crop Information Guide</h2>
-    <p>Explore information on common crops, powered by a live plant database. Note: A CORS proxy is used for this client-side demo.</p>
-    
+    <p>Explore information on common crops, powered by a live plant database.</p>
+
+    <div class="region-input">
+      <label for="userRegion">Enter your region / location:</label>
+      <input type="text" id="userRegion" placeholder="e.g. Maharashtra, India" />
+      <button id="suggestBtn">Suggest Crops for Me</button>
+    </div>
+
     <div class="crop-cards" id="crop-container">
       <div class="loading-spinner"></div>
-      </div>
+    </div>
   </section>
 
   <footer>
@@ -39,56 +139,75 @@
   </footer>
 
   <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        const cropContainer = document.getElementById('crop-container');
-        // IMPORTANT: Replace with your own free API Token from https://trefle.io/
-        const trefleToken = 'YOUR_TREFLE_API_TOKEN';
-        
-        const commonCrops = ['corn', 'wheat', 'rice', 'potato', 'soybean', 'cotton'];
+  document.addEventListener('DOMContentLoaded', () => {
+    const cropContainer = document.getElementById('crop-container');
+    const suggestBtn = document.getElementById('suggestBtn');
+    const userRegionInput = document.getElementById('userRegion');
+    
+    // ✅ Replace with your actual API key from perenual.com
+    const perenualKey = 'sk-DpVt68f133f7dd02612951';
 
-        const fetchCropData = async (cropName) => {
-            const url = `https://cors-anywhere.herokuapp.com/https://trefle.io/api/v1/plants/search?token=${trefleToken}&q=${cropName}`;
-            
-            try {
-                const response = await fetch(url);
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                const data = await response.json();
-                return data.data[0]; 
-            } catch (error) {
-                console.error(`Error fetching data for ${cropName}:`, error);
-                return null;
-            }
-        };
+    const commonCrops = ['corn', 'wheat', 'rice', 'potato', 'soybean', 'cotton'];
 
-        const displayCrops = async () => {
-            cropContainer.innerHTML = '<div class="loading-spinner"></div>';
-            let allCropsHtml = '';
+    async function fetchCropData(cropName) {
+      try {
+        // ✅ Correct endpoint (use 'species-list' for broader search)
+        const url = `https://perenual.com/api/species-list?key=${perenualKey}&q=${encodeURIComponent(cropName)}`;
+        console.log("Fetching:", url);
 
-            for (const crop of commonCrops) {
-                const cropData = await fetchCropData(crop);
-                if (cropData) {
-                    const imageUrl = cropData.image_url || 'https://images.pexels.com/photos/326055/pexels-photo-326055.jpeg?auto=compress&cs=tinysrgb&w=400';
-                    allCropsHtml += `
-                        <div class="card">
-                            <img src="${imageUrl}" alt="${cropData.common_name}">
-                            <h4>${cropData.common_name || 'N/A'}</h4>
-                            <p><strong>Scientific Name:</strong> <em>${cropData.scientific_name}</em></p>
-                            <p><strong>Family:</strong> ${cropData.family_common_name || cropData.family}</p>
-                        </div>
-                    `;
-                }
-            }
-            if (allCropsHtml) {
-                cropContainer.innerHTML = allCropsHtml;
-            } else {
-                 cropContainer.innerHTML = '<p class="text-center">Could not load crop data. Please check your API token and ensure the CORS proxy is active.</p>';
-            }
-        };
+        const resp = await fetch(url);
+        if (!resp.ok) throw new Error(`HTTP Error: ${resp.status}`);
 
-        displayCrops();
+        const json = await resp.json();
+        console.log("Data received:", json);
+
+        if (json && json.data && json.data.length > 0) return json.data[0];
+        else console.warn("No data found for", cropName);
+      } catch (err) {
+        console.error('Fetch error for', cropName, err);
+      }
+      return null;
+    }
+
+    async function displayCrops(cropNames) {
+      cropContainer.innerHTML = '<div class="loading-spinner"></div>';
+      let html = '';
+
+      for (const c of cropNames) {
+        const data = await fetchCropData(c);
+        if (data) {
+          const imageUrl = data.default_image?.medium_url ||
+                           'https://images.pexels.com/photos/326055/pexels-photo-326055.jpeg?auto=compress&cs=tinysrgb&w=400';
+          html += `
+            <div class="card">
+              <img src="${imageUrl}" alt="${data.common_name}">
+              <h4>${data.common_name || c}</h4>
+              <p><strong>Scientific Name:</strong> <em>${data.scientific_name || 'N/A'}</em></p>
+              <p><strong>Growth Cycle:</strong> ${data.cycle || 'N/A'}</p>
+            </div>
+          `;
+        }
+      }
+
+      cropContainer.innerHTML = html || '<p>⚠️ Unable to load crop data. Please check your API key or internet connection.</p>';
+    }
+
+    function suggestCropsByRegion(region) {
+      const regionLower = region.toLowerCase();
+      if (regionLower.includes('maharashtra')) return ['soybean', 'cotton', 'maize'];
+      if (regionLower.includes('karnataka')) return ['rice', 'sugarcane', 'banana'];
+      if (regionLower.includes('punjab')) return ['wheat', 'rice', 'maize'];
+      return commonCrops;
+    }
+
+    suggestBtn.addEventListener('click', () => {
+      const region = userRegionInput.value.trim();
+      const suggestions = region ? suggestCropsByRegion(region) : commonCrops;
+      displayCrops(suggestions);
     });
-  </script>
+
+    displayCrops(commonCrops);
+  });
+</script>
 </body>
 </html>
