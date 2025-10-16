@@ -223,12 +223,12 @@
   </div>
 
   <script type="module">
-  // Import Firebase core + Firestore + Auth SDKs
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
-  import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
-  import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
+  import { 
+    getFirestore, collection, addDoc, getDocs, query, where, serverTimestamp 
+  } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
 
-  // 🔥 Your Firebase Configuration
+  // 🔥 Firebase Config
   const firebaseConfig = {
     apiKey: "AIzaSyAXes_sqXoW-r60IfBRghgjsWV7QbyZEoY",
     authDomain: "agri-assist-36efe.firebaseapp.com",
@@ -242,68 +242,90 @@
   // Initialize Firebase
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
-  const auth = getAuth(app);
 
-  // DOM elements
+  // DOM Elements
   const loginForm = document.getElementById('loginForm');
   const createAccountForm = document.getElementById('createAccountForm');
   const toggleFormLink = document.getElementById('toggleFormLink');
   const toggleText = document.getElementById('toggleText');
 
-  // LOGIN with Firebase Auth
-  loginForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const username = loginForm.loginUsername.value.trim();
-    const password = loginForm.loginPassword.value;
-
-    try {
-      // Using username as part of email for Firebase (since Firebase Auth needs email)
-      const email = `${username}@agriassist.com`;
-      await signInWithEmailAndPassword(auth, email, password);
-
-      // Record login in Firestore
-      await addDoc(collection(db, "logins"), {
-        username: username,
-        timestamp: serverTimestamp()
-      });
-
-      alert(`✅ Login successful! Welcome ${username}`);
-      window.location.href = 'index.html';
-    } catch (error) {
-      console.error("Login Error:", error.message);
-      alert("❌ Invalid username or password.");
-    }
-  });
-
-  // CREATE ACCOUNT in Firebase Auth + Firestore
+  // --------------------------
+  // CREATE ACCOUNT (Firestore)
+  // --------------------------
   createAccountForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const username = createAccountForm.createUsername.value.trim();
     const password = createAccountForm.createPassword.value;
 
     try {
-      const email = `${username}@agriassist.com`;
-      await createUserWithEmailAndPassword(auth, email, password);
+      // Check if username already exists
+      const usersRef = collection(db, "users");
+      const q = query(usersRef, where("username", "==", username));
+      const snapshot = await getDocs(q);
 
-      // Add user record to Firestore
-      await addDoc(collection(db, "users"), {
+      if (!snapshot.empty) {
+        alert("⚠️ Username already exists. Please login instead.");
+        createAccountForm.classList.add('hidden');
+        loginForm.classList.remove('hidden');
+        toggleText.textContent = "Don't have an account?";
+        toggleFormLink.textContent = 'Create Account';
+        return;
+      }
+
+      // Add new user record
+      await addDoc(usersRef, {
         username: username,
+        password: password,  // ⚠️ For demo only. Hash this in production.
         createdAt: serverTimestamp()
       });
 
       alert("✅ Account created successfully! You can now login.");
-
       createAccountForm.classList.add('hidden');
       loginForm.classList.remove('hidden');
       toggleText.textContent = "Don't have an account?";
       toggleFormLink.textContent = 'Create Account';
+
     } catch (error) {
-      console.error("Signup Error:", error.message);
-      alert("⚠️ Error creating account: " + error.message);
+      console.error("Signup Error:", error);
+      alert("❌ Error creating account: " + error.message);
     }
   });
 
-  // Toggle login/create forms
+  // --------------------------
+  // LOGIN (Firestore Check)
+  // --------------------------
+  loginForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const username = loginForm.loginUsername.value.trim();
+    const password = loginForm.loginPassword.value;
+
+    try {
+      const usersRef = collection(db, "users");
+      const q = query(usersRef, where("username", "==", username), where("password", "==", password));
+      const snapshot = await getDocs(q);
+
+      if (!snapshot.empty) {
+        // Record login time
+        await addDoc(collection(db, "logins"), {
+          username: username,
+          timestamp: serverTimestamp()
+        });
+
+        alert(`✅ Login successful! Welcome ${username}`);
+        window.location.href = 'index.html';
+      } else {
+        alert("❌ Invalid username or password.");
+      }
+
+    } catch (error) {
+      console.error("Login Error:", error);
+      alert("⚠️ Error during login: " + error.message);
+    }
+  });
+
+  // --------------------------
+  // TOGGLE FORM
+  // --------------------------
   toggleFormLink.addEventListener('click', (e) => {
     e.preventDefault();
     loginForm.classList.toggle('hidden');
@@ -317,7 +339,9 @@
     }
   });
 
-  // Toggle password visibility
+  // --------------------------
+  // PASSWORD VISIBILITY
+  // --------------------------
   document.querySelectorAll('.toggle-password').forEach(toggle => {
     toggle.addEventListener('click', () => {
       const input = toggle.previousElementSibling;
