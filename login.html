@@ -222,98 +222,13 @@
     </div>
   </div>
 
-  <script>
-    const loginForm = document.getElementById('loginForm');
-    const createAccountForm = document.getElementById('createAccountForm');
-    const toggleFormLink = document.getElementById('toggleFormLink');
-    const toggleText = document.getElementById('toggleText');
-
-    // Load users from localStorage or set default demo users
-    let users = JSON.parse(localStorage.getItem('users')) || [
-      { username: 'farmer1', password: 'Farmer123' },
-      { username: 'farmer2', password: 'Agri456' }
-    ];
-
-    // Save users to localStorage
-    function saveUsers() {
-      localStorage.setItem('users', JSON.stringify(users));
-    }
-
-    
-    // Login
-loginForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const username = loginForm.loginUsername.value.trim();
-      const password = loginForm.loginPassword.value;
-
-      const user = users.find(u => u.username === username && u.password === password);
-      if (user) {
-        alert(`Login successful! Welcome ${username}`);
-        window.location.href = 'index.html'; // Redirect to index.html after login
-      } else {
-        alert('Invalid username or password');
-      }
-    });
-
-
-    // Create Account
-    createAccountForm.addEventListener('submit', (e) => {
-      e.preventDefault();
-      const username = createAccountForm.createUsername.value.trim();
-      const password = createAccountForm.createPassword.value;
-
-      if (users.find(u => u.username === username)) {
-        alert('Username already exists!');
-      } else {
-        users.push({ username, password });
-        saveUsers();
-        alert('Account created successfully! You can now login.');
-        createAccountForm.classList.add('hidden');
-        loginForm.classList.remove('hidden');
-        toggleText.textContent = "Don't have an account?";
-        toggleFormLink.textContent = 'Create Account';
-      }
-    });
-
-    // Toggle forms
-    toggleFormLink.addEventListener('click', (e) => {
-      e.preventDefault();
-      if (loginForm.classList.contains('hidden')) {
-        loginForm.classList.remove('hidden');
-        createAccountForm.classList.add('hidden');
-        toggleText.textContent = "Don't have an account?";
-        toggleFormLink.textContent = 'Create Account';
-      } else {
-        loginForm.classList.add('hidden');
-        createAccountForm.classList.remove('hidden');
-        toggleText.textContent = "Already have an account?";
-        toggleFormLink.textContent = 'Login';
-      }
-    });
-
-    // Toggle password visibility
-    document.querySelectorAll('.toggle-password').forEach(toggle => {
-      toggle.addEventListener('click', () => {
-        const input = toggle.previousElementSibling;
-        if (input.type === 'password') {
-          input.type = 'text';
-          toggle.textContent = '🙈';
-        } else {
-          input.type = 'password';
-          toggle.textContent = '👁️';
-        }
-      });
-    });
-  </script>
   <script type="module">
-  // Import the functions you need from the SDKs you need
+  // Import Firebase core + Firestore + Auth SDKs
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
-  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-analytics.js";
-  // TODO: Add SDKs for Firebase products that you want to use
-  // https://firebase.google.com/docs/web/setup#available-libraries
+  import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-firestore.js";
+  import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-auth.js";
 
-  // Your web app's Firebase configuration
-  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+  // 🔥 Your Firebase Configuration
   const firebaseConfig = {
     apiKey: "AIzaSyAXes_sqXoW-r60IfBRghgjsWV7QbyZEoY",
     authDomain: "agri-assist-36efe.firebaseapp.com",
@@ -326,7 +241,90 @@ loginForm.addEventListener('submit', (e) => {
 
   // Initialize Firebase
   const app = initializeApp(firebaseConfig);
-  const analytics = getAnalytics(app);
+  const db = getFirestore(app);
+  const auth = getAuth(app);
+
+  // DOM elements
+  const loginForm = document.getElementById('loginForm');
+  const createAccountForm = document.getElementById('createAccountForm');
+  const toggleFormLink = document.getElementById('toggleFormLink');
+  const toggleText = document.getElementById('toggleText');
+
+  // LOGIN with Firebase Auth
+  loginForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const username = loginForm.loginUsername.value.trim();
+    const password = loginForm.loginPassword.value;
+
+    try {
+      // Using username as part of email for Firebase (since Firebase Auth needs email)
+      const email = `${username}@agriassist.com`;
+      await signInWithEmailAndPassword(auth, email, password);
+
+      // Record login in Firestore
+      await addDoc(collection(db, "logins"), {
+        username: username,
+        timestamp: serverTimestamp()
+      });
+
+      alert(`✅ Login successful! Welcome ${username}`);
+      window.location.href = 'index.html';
+    } catch (error) {
+      console.error("Login Error:", error.message);
+      alert("❌ Invalid username or password.");
+    }
+  });
+
+  // CREATE ACCOUNT in Firebase Auth + Firestore
+  createAccountForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const username = createAccountForm.createUsername.value.trim();
+    const password = createAccountForm.createPassword.value;
+
+    try {
+      const email = `${username}@agriassist.com`;
+      await createUserWithEmailAndPassword(auth, email, password);
+
+      // Add user record to Firestore
+      await addDoc(collection(db, "users"), {
+        username: username,
+        createdAt: serverTimestamp()
+      });
+
+      alert("✅ Account created successfully! You can now login.");
+
+      createAccountForm.classList.add('hidden');
+      loginForm.classList.remove('hidden');
+      toggleText.textContent = "Don't have an account?";
+      toggleFormLink.textContent = 'Create Account';
+    } catch (error) {
+      console.error("Signup Error:", error.message);
+      alert("⚠️ Error creating account: " + error.message);
+    }
+  });
+
+  // Toggle login/create forms
+  toggleFormLink.addEventListener('click', (e) => {
+    e.preventDefault();
+    loginForm.classList.toggle('hidden');
+    createAccountForm.classList.toggle('hidden');
+    if (loginForm.classList.contains('hidden')) {
+      toggleText.textContent = "Already have an account?";
+      toggleFormLink.textContent = 'Login';
+    } else {
+      toggleText.textContent = "Don't have an account?";
+      toggleFormLink.textContent = 'Create Account';
+    }
+  });
+
+  // Toggle password visibility
+  document.querySelectorAll('.toggle-password').forEach(toggle => {
+    toggle.addEventListener('click', () => {
+      const input = toggle.previousElementSibling;
+      input.type = input.type === 'password' ? 'text' : 'password';
+      toggle.textContent = input.type === 'password' ? '👁️' : '🙈';
+    });
+  });
 </script>
 </body>
 </html>
